@@ -952,7 +952,7 @@ function testSyncFunctionality() {
   let allTestsPassed = true;
   
   // Test 1: Check if sync functions exist
-  const syncFunctions = ['syncWithServer', 'mergeQuotes', 'detectConflicts', 'resolveConflict'];
+  const syncFunctions = ['syncWithServer', 'fetchQuotesFromServer', 'mergeQuotes', 'detectConflicts', 'resolveConflict'];
   syncFunctions.forEach(funcName => {
     if (typeof window[funcName] === 'function') {
       console.log(`✓ ${funcName} function exists`);
@@ -962,7 +962,25 @@ function testSyncFunctionality() {
     }
   });
   
-  // Test 2: Test mergeQuotes function
+  // Test 2: Test fetchQuotesFromServer function
+  (async () => {
+    try {
+      console.log('Testing fetchQuotesFromServer...');
+      const result = await fetchQuotesFromServer();
+      
+      if (result.success && Array.isArray(result.quotes)) {
+        console.log(`✓ fetchQuotesFromServer works correctly (fetched ${result.quotes.length} quotes)`);
+      } else {
+        console.error('✗ fetchQuotesFromServer failed');
+        allTestsPassed = false;
+      }
+    } catch (error) {
+      console.error('✗ fetchQuotesFromServer test failed:', error);
+      allTestsPassed = false;
+    }
+  })();
+  
+  // Test 3: Test mergeQuotes function
   try {
     const localQuotes = [{ text: 'Local quote', category: 'Test' }];
     const serverQuotes = [{ text: 'Server quote', category: 'Test' }];
@@ -979,7 +997,7 @@ function testSyncFunctionality() {
     allTestsPassed = false;
   }
   
-  // Test 3: Test conflict detection
+  // Test 4: Test conflict detection
   try {
     const localQuotes = [{ text: 'Same quote', category: 'Test' }];
     const serverQuotes = [{ text: 'Different quote', category: 'Test' }];
@@ -996,19 +1014,51 @@ function testSyncFunctionality() {
     allTestsPassed = false;
   }
   
-  // Test 4: Check network status
+  // Test 5: Check network status
   console.log(`✓ Network status: ${isOnline ? 'Online' : 'Offline'}`);
   
-  // Test 5: Check auto-sync status
+  // Test 6: Check auto-sync status
   console.log(`✓ Auto-sync: ${userPreferences.autoSync ? 'Enabled' : 'Disabled'}`);
   
-  if (allTestsPassed) {
-    console.log('✓ All sync tests passed!');
-    showNotification('Sync functionality tests passed!', 'success');
-    return true;
-  } else {
-    console.error('✗ Some sync tests failed');
-    showNotification('Sync functionality tests failed!', 'error');
+  // Wait a bit for async tests to complete
+  setTimeout(() => {
+    if (allTestsPassed) {
+      console.log('✓ All sync tests passed!');
+      showNotification('Sync functionality tests passed!', 'success');
+    } else {
+      console.error('✗ Some sync tests failed');
+      showNotification('Sync functionality tests failed!', 'error');
+    }
+  }, 2000);
+  
+  return allTestsPassed;
+}
+
+// Manual test function for fetchQuotesFromServer
+async function testFetchQuotesFromServer() {
+  console.log('=== Testing fetchQuotesFromServer Function ===');
+  
+  try {
+    console.log('Calling fetchQuotesFromServer...');
+    const result = await fetchQuotesFromServer();
+    
+    if (result.success) {
+      console.log('✓ fetchQuotesFromServer successful!');
+      console.log(`- Fetched ${result.quotes.length} quotes`);
+      console.log(`- Source: ${result.source}`);
+      console.log(`- Timestamp: ${new Date(result.timestamp).toLocaleString()}`);
+      console.log('- Sample quotes:', result.quotes.slice(0, 2));
+      
+      showNotification(`Successfully fetched ${result.quotes.length} quotes from server!`, 'success');
+      return true;
+    } else {
+      console.error('✗ fetchQuotesFromServer failed:', result.error);
+      showNotification(`Failed to fetch quotes: ${result.error}`, 'error');
+      return false;
+    }
+  } catch (error) {
+    console.error('✗ fetchQuotesFromServer test failed:', error);
+    showNotification(`Test failed: ${error.message}`, 'error');
     return false;
   }
 }
@@ -1017,6 +1067,7 @@ function testSyncFunctionality() {
 window.testPopulateCategories = testPopulateCategories;
 window.testWebStorage = testWebStorage;
 window.testSyncFunctionality = testSyncFunctionality;
+window.testFetchQuotesFromServer = testFetchQuotesFromServer;
 window.createSampleJsonData = createSampleJsonData;
 
 // Comprehensive validation function for all functionality
@@ -1201,14 +1252,14 @@ async function syncWithServer() {
     console.log('Starting server sync...');
     showNotification('Syncing with server...', 'info');
 
-    // Fetch data from server
-    const serverResponse = await simulateServerFetch();
+    // Fetch data from server using the dedicated function
+    const serverResponse = await fetchQuotesFromServer();
     
     if (!serverResponse.success) {
       throw new Error(serverResponse.error);
     }
 
-    const serverQuotes = serverResponse.data;
+    const serverQuotes = serverResponse.quotes;
     const localQuotes = [...quotes];
     
     // Merge server and local data
@@ -1616,6 +1667,44 @@ async function simulateServerPost(quotes) {
 }
 
 // Real API functions (using JSONPlaceholder for actual server interaction)
+async function fetchQuotesFromServer() {
+  try {
+    console.log('Fetching quotes from server...');
+    
+    // Use simulation by default, but can be configured to use real API
+    const useRealAPI = false; // Set to true to use real JSONPlaceholder API
+    
+    let serverResponse;
+    
+    if (useRealAPI) {
+      serverResponse = await fetchFromServer();
+    } else {
+      serverResponse = await simulateServerFetch();
+    }
+    
+    if (!serverResponse.success) {
+      throw new Error(serverResponse.error || 'Failed to fetch quotes from server');
+    }
+    
+    console.log(`Successfully fetched ${serverResponse.data.length} quotes from server`);
+    
+    return {
+      success: true,
+      quotes: serverResponse.data,
+      timestamp: serverResponse.timestamp,
+      source: useRealAPI ? 'real-api' : 'simulation'
+    };
+    
+  } catch (error) {
+    console.error('Error fetching quotes from server:', error);
+    return {
+      success: false,
+      error: error.message,
+      timestamp: Date.now()
+    };
+  }
+}
+
 async function fetchFromServer() {
   try {
     const response = await fetch(`${SERVER_CONFIG.BASE_URL}/posts?_limit=5`);
