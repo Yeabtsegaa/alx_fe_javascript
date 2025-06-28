@@ -123,11 +123,167 @@
             margin: 20px 0;
             text-align: center;
         }
+        
+        /* Sync controls and status */
+        .sync-section {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            border-left: 4px solid #17a2b8;
+        }
+        
+        .sync-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .sync-status {
+            font-size: 14px;
+            padding: 5px 10px;
+            border-radius: 3px;
+            margin-left: 10px;
+        }
+        
+        .sync-status.success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .sync-status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        .sync-status.syncing {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .sync-btn {
+            background-color: #17a2b8;
+        }
+        
+        .sync-btn:hover {
+            background-color: #138496;
+        }
+        
+        /* Notifications */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 5px;
+            color: white;
+            font-weight: bold;
+            z-index: 1000;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        .notification.success {
+            background-color: #28a745;
+        }
+        
+        .notification.error {
+            background-color: #dc3545;
+        }
+        
+        .notification.warning {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        
+        .notification.info {
+            background-color: #17a2b8;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        /* Conflict resolution dialog */
+        .conflict-dialog {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+        
+        .conflict-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .conflict-item {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            border-left: 4px solid #ffc107;
+        }
+        
+        .conflict-options {
+            margin-top: 10px;
+        }
+        
+        .conflict-options label {
+            display: block;
+            margin: 8px 0;
+            cursor: pointer;
+        }
+        
+        .conflict-options input[type="radio"] {
+            margin-right: 8px;
+        }
+        
+        .conflict-actions {
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .conflict-actions button {
+            margin: 0 5px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Dynamic Quote Generator</h1>
+        
+        <!-- Sync status and controls -->
+        <div class="sync-section">
+            <div class="sync-controls">
+                <div>
+                    <strong>Server Sync:</strong>
+                    <span id="syncStatus" class="sync-status">Not synced</span>
+                </div>
+                <button class="sync-btn" onclick="manualSync()">Sync Now</button>
+            </div>
+            <div style="font-size: 12px; color: #666;">
+                Auto-sync every 30 seconds when online
+            </div>
+        </div>
         
         <!-- Quote display area -->
         <div id="quoteDisplay">Click "Show New Quote" to get started!</div>
