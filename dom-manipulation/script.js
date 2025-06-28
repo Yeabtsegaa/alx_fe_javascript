@@ -1683,3 +1683,17 @@ async function postToServer(quotes) {
     };
   }
 }
+
+// Test sync functionality
+testSyncFunctionality()
+
+// Manual sync
+manualSync()
+
+// Force sync
+forceSync()
+
+// Check sync status
+console.log('Network status:', navigator.onLine)
+console.log('Auto-sync enabled:', userPreferences.autoSync)
+console.log('Last sync:', lastSyncTimestamp ? new Date(lastSyncTimestamp) : 'Never')
