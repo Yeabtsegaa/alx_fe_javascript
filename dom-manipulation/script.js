@@ -3,7 +3,8 @@ const STORAGE_KEYS = {
   QUOTES: 'dynamicQuoteGenerator_quotes',
   PREFERENCES: 'dynamicQuoteGenerator_preferences',
   LAST_QUOTE: 'dynamicQuoteGenerator_lastQuote',
-  SESSION_PREFERENCES: 'dynamicQuoteGenerator_sessionPrefs'
+  SESSION_PREFERENCES: 'dynamicQuoteGenerator_sessionPrefs',
+  LAST_FILTER: 'dynamicQuoteGenerator_lastFilter'
 };
 
 // Default quotes array
@@ -34,7 +35,7 @@ const quoteDisplay = document.getElementById("quoteDisplay");
 const newQuoteBtn = document.getElementById("newQuote");
 const showAllQuotesBtn = document.getElementById("showAllQuotes");
 const clearQuotesBtn = document.getElementById("clearQuotes");
-const categorySelect = document.getElementById("categorySelect");
+const categoryFilter = document.getElementById("categoryFilter");
 const statsDiv = document.getElementById("stats");
 const quoteListDiv = document.getElementById("quoteList");
 
@@ -96,6 +97,13 @@ function saveSessionData() {
       timestamp: new Date().toISOString()
     };
     sessionStorage.setItem(STORAGE_KEYS.SESSION_PREFERENCES, JSON.stringify(sessionData));
+    
+    // Also save the last filter to localStorage for persistence across sessions
+    if (currentCategoryFilter) {
+      localStorage.setItem(STORAGE_KEYS.LAST_FILTER, currentCategoryFilter);
+    } else {
+      localStorage.removeItem(STORAGE_KEYS.LAST_FILTER);
+    }
   } catch (error) {
     console.error('Error saving session data:', error);
   }
@@ -111,6 +119,12 @@ function loadSessionData() {
       if (userPreferences.rememberLastQuote && data.lastViewedQuote) {
         quoteDisplay.innerHTML = data.lastViewedQuote;
       }
+    }
+    
+    // Load the last filter from localStorage for persistence across sessions
+    const lastFilter = localStorage.getItem(STORAGE_KEYS.LAST_FILTER);
+    if (lastFilter && !currentCategoryFilter) {
+      currentCategoryFilter = lastFilter;
     }
   } catch (error) {
     console.error('Error loading session data:', error);
@@ -170,7 +184,7 @@ function importFromJsonFile(event) {
       saveQuotes();
       
       // Update UI
-      updateCategorySelect();
+      populateCategories();
       updateStats();
       
       showNotification(`${validQuotes.length} quotes imported successfully!`, 'success');
@@ -199,6 +213,7 @@ function clearAllStorage() {
       // Clear local storage
       localStorage.removeItem(STORAGE_KEYS.QUOTES);
       localStorage.removeItem(STORAGE_KEYS.PREFERENCES);
+      localStorage.removeItem(STORAGE_KEYS.LAST_FILTER);
       
       // Clear session storage
       sessionStorage.removeItem(STORAGE_KEYS.SESSION_PREFERENCES);
@@ -213,8 +228,11 @@ function clearAllStorage() {
         darkMode: false
       };
       
+      // Reset filter state
+      currentCategoryFilter = "";
+      
       // Update UI
-      updateCategorySelect();
+      populateCategories();
       updateStats();
       clearDisplay();
       
@@ -311,6 +329,10 @@ function addQuote() {
     return;
   }
 
+  // Check if this is a new category
+  const existingCategories = [...new Set(quotes.map(quote => quote.category))];
+  const isNewCategory = !existingCategories.includes(newCategory);
+
   // Add new quote to the array
   quotes.push({ text: newText, category: newCategory });
 
@@ -321,8 +343,8 @@ function addQuote() {
   // Save to storage
   saveQuotes();
 
-  // Update the UI
-  updateCategorySelect();
+  // Update the UI - this will also update the categories dropdown if a new category was introduced
+  populateCategories();
   updateStats();
   
   // Show the newly added quote
@@ -331,37 +353,140 @@ function addQuote() {
     <div style="color: #666; font-size: 0.9em;">— ${newCategory} (Newly Added!)</div>
   `;
 
-  // Show success message
-  showNotification('Quote added successfully!', 'success');
+  // Show success message with category information
+  const successMessage = isNewCategory 
+    ? `Quote added successfully! New category "${newCategory}" created.`
+    : 'Quote added successfully!';
+  showNotification(successMessage, 'success');
 }
 
 function deleteQuote(index) {
   if (confirm('Are you sure you want to delete this quote?')) {
+    const deletedQuote = quotes[index];
     quotes.splice(index, 1);
     saveQuotes();
-    updateCategorySelect();
+    
+    // Check if this was the last quote in its category
+    const remainingQuotesInCategory = quotes.filter(quote => quote.category === deletedQuote.category);
+    const categoryRemoved = remainingQuotesInCategory.length === 0;
+    
+    // Update the UI
+    populateCategories();
     updateStats();
-    showAllQuotes();
-    showNotification('Quote deleted successfully!', 'info');
+    
+    // Update the display if showing all quotes
+    if (quoteListDiv.innerHTML !== '') {
+      showAllQuotes();
+    }
+    
+    // Show appropriate notification
+    const notificationMessage = categoryRemoved 
+      ? `Quote deleted. Category "${deletedQuote.category}" is now empty.`
+      : 'Quote deleted successfully!';
+    showNotification(notificationMessage, 'info');
   }
 }
 
 function updateCategorySelect() {
-  const categories = [...new Set(quotes.map(quote => quote.category))];
-  
-  // Clear existing options except the first one
-  categorySelect.innerHTML = '<option value="">All Categories</option>';
-  
-  categories.forEach(category => {
-    const option = document.createElement('option');
-    option.value = category;
-    option.textContent = category;
-    categorySelect.appendChild(option);
-  });
-  
-  // Restore current filter
-  if (currentCategoryFilter) {
-    categorySelect.value = currentCategoryFilter;
+  populateCategories();
+}
+
+// Function to populate categories dynamically (as required by the task)
+function populateCategories() {
+  try {
+    // Extract unique categories from the quotes array
+    const categories = [...new Set(quotes.map(quote => quote.category))];
+    
+    // Sort categories alphabetically for better user experience
+    categories.sort();
+    
+    // Clear existing options and add the default "All Categories" option
+    categoryFilter.innerHTML = '<option value="all">All Categories</option>';
+    
+    // If no categories exist, show a message
+    if (categories.length === 0) {
+      const option = document.createElement('option');
+      option.value = "";
+      option.textContent = "No categories available";
+      option.disabled = true;
+      categoryFilter.appendChild(option);
+      return;
+    }
+    
+    // Populate the dropdown with categories
+    categories.forEach(category => {
+      const option = document.createElement('option');
+      option.value = category;
+      
+      // Count quotes in this category for better UX
+      const quoteCount = quotes.filter(quote => quote.category === category).length;
+      option.textContent = `${category} (${quoteCount})`;
+      
+      categoryFilter.appendChild(option);
+    });
+    
+    // Restore current filter if it exists and is still valid
+    if (currentCategoryFilter && categories.includes(currentCategoryFilter)) {
+      categoryFilter.value = currentCategoryFilter;
+    } else if (currentCategoryFilter && !categories.includes(currentCategoryFilter)) {
+      // If the current filter is no longer valid, reset it
+      currentCategoryFilter = "";
+      categoryFilter.value = "all";
+      showNotification(`Category "${currentCategoryFilter}" no longer exists. Filter reset.`, 'info');
+    }
+    
+    console.log(`Categories populated: ${categories.length} categories found`);
+    
+  } catch (error) {
+    console.error('Error populating categories:', error);
+    showNotification('Error loading categories', 'error');
+    
+    // Fallback: show basic options
+    categoryFilter.innerHTML = `
+      <option value="all">All Categories</option>
+      <option value="" disabled>Error loading categories</option>
+    `;
+  }
+}
+
+// Function to filter quotes based on selected category (as required by the task)
+function filterQuotes() {
+  try {
+    const selectedCategory = categoryFilter.value;
+    
+    // Update the current filter state
+    if (selectedCategory === 'all') {
+      currentCategoryFilter = "";
+    } else {
+      currentCategoryFilter = selectedCategory;
+    }
+    
+    // Save the filter preference to web storage
+    saveSessionData();
+    
+    // Update the display based on current view
+    if (quoteListDiv.innerHTML !== '') {
+      // If showing all quotes, update the list
+      showAllQuotes();
+    } else {
+      // If showing a single quote, show a new random quote from the filtered category
+      showRandomQuote();
+    }
+    
+    // Update statistics to reflect the current filter
+    updateStats();
+    
+    // Show notification about the filter change
+    const filterMessage = currentCategoryFilter 
+      ? `Filtered to show quotes from category: "${currentCategoryFilter}"`
+      : 'Showing quotes from all categories';
+    showNotification(filterMessage, 'info');
+    
+    console.log(`Filter applied: ${currentCategoryFilter || 'All categories'}`);
+    
+  } catch (error) {
+    console.error('Error applying filter:', error);
+    showNotification('Error applying filter', 'error');
   }
 }
 
@@ -497,13 +622,6 @@ newQuoteBtn.addEventListener('click', showRandomQuote);
 showAllQuotesBtn.addEventListener('click', showAllQuotes);
 clearQuotesBtn.addEventListener('click', clearDisplay);
 
-categorySelect.addEventListener('change', function() {
-  currentCategoryFilter = this.value;
-  if (quoteListDiv.innerHTML !== '') {
-    showAllQuotes();
-  }
-});
-
 // Preference change listeners
 document.getElementById('autoSave').addEventListener('change', function() {
   handlePreferenceChange('autoSave', this.checked);
@@ -532,6 +650,82 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
+// Function to validate categories population (for debugging and testing)
+function validateCategoriesPopulation() {
+  const categories = [...new Set(quotes.map(quote => quote.category))];
+  const dropdownOptions = Array.from(categoryFilter.options).map(option => option.value);
+  
+  console.log('Categories validation:');
+  console.log('- Quotes array categories:', categories);
+  console.log('- Dropdown options:', dropdownOptions);
+  console.log('- Current filter:', currentCategoryFilter);
+  
+  // Check if all categories from quotes are in the dropdown
+  const missingCategories = categories.filter(cat => !dropdownOptions.includes(cat));
+  if (missingCategories.length > 0) {
+    console.warn('Missing categories in dropdown:', missingCategories);
+    return false;
+  }
+  
+  // Check if current filter is valid
+  if (currentCategoryFilter && !categories.includes(currentCategoryFilter)) {
+    console.warn('Current filter is invalid:', currentCategoryFilter);
+    return false;
+  }
+  
+  console.log('Categories validation passed');
+  return true;
+}
+
+// Test function to verify populateCategories functionality
+function testPopulateCategories() {
+  console.log('=== Testing populateCategories Function ===');
+  
+  // Test 1: Check if function exists
+  if (typeof populateCategories === 'function') {
+    console.log('✓ populateCategories function exists');
+  } else {
+    console.error('✗ populateCategories function not found');
+    return false;
+  }
+  
+  // Test 2: Check if categoryFilter element exists
+  if (categoryFilter) {
+    console.log('✓ categoryFilter element found');
+  } else {
+    console.error('✗ categoryFilter element not found');
+    return false;
+  }
+  
+  // Test 3: Check if quotes array has data
+  if (quotes && quotes.length > 0) {
+    console.log(`✓ Quotes array has ${quotes.length} items`);
+  } else {
+    console.error('✗ Quotes array is empty or undefined');
+    return false;
+  }
+  
+  // Test 4: Manually trigger populateCategories
+  console.log('Triggering populateCategories...');
+  populateCategories();
+  
+  // Test 5: Validate the results
+  const validationResult = validateCategoriesPopulation();
+  
+  if (validationResult) {
+    console.log('✓ All tests passed!');
+    showNotification('Categories population test passed!', 'success');
+    return true;
+  } else {
+    console.error('✗ Some tests failed');
+    showNotification('Categories population test failed!', 'error');
+    return false;
+  }
+}
+
+// Make test function available globally for manual testing
+window.testPopulateCategories = testPopulateCategories;
+
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
   // Load data from storage
@@ -540,10 +734,15 @@ document.addEventListener('DOMContentLoaded', function() {
   loadSessionData();
   
   // Initialize UI
-  updateCategorySelect();
+  populateCategories();
   updateStats();
   updatePreferenceCheckboxes();
   createAddQuoteForm();
+  
+  // Validate categories population
+  setTimeout(() => {
+    validateCategoriesPopulation();
+  }, 100);
   
   // Show initial quote
   if (!userPreferences.rememberLastQuote || !quoteDisplay.textContent.includes('"')) {

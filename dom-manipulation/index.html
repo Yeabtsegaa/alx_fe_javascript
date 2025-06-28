@@ -264,13 +264,15 @@
       <button id="newQuote">Show New Quote</button>
       <button id="showAllQuotes">Show All Quotes</button>
       <button id="clearQuotes">Clear Display</button>
+      <button onclick="testPopulateCategories()" style="background-color: #6c757d;">Test Categories</button>
     </div>
 
     <!-- Category filter -->
     <div class="category-filter">
-      <label for="categorySelect">Filter by Category:</label>
-      <select id="categorySelect">
-        <option value="">All Categories</option>
+      <label for="categoryFilter">Filter by Category:</label>
+      <select id="categoryFilter" onchange="filterQuotes()">
+        <option value="all">All Categories</option>
+        <!-- Dynamically populated categories -->
       </select>
     </div>
 
