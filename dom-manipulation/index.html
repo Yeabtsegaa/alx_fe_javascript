@@ -116,6 +116,140 @@
       color: #666;
       font-weight: bold;
     }
+    
+    .storage-section {
+      margin-top: 20px;
+      padding: 20px;
+      background-color: #e3f2fd;
+      border-radius: 8px;
+      border-left: 4px solid #2196f3;
+    }
+    
+    .storage-section h3 {
+      margin-top: 0;
+      color: #1976d2;
+    }
+    
+    .storage-controls {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
+    }
+    
+    .export-btn {
+      background-color: #28a745;
+    }
+    
+    .export-btn:hover {
+      background-color: #218838;
+    }
+    
+    .import-btn {
+      background-color: #ffc107;
+      color: #212529;
+    }
+    
+    .import-btn:hover {
+      background-color: #e0a800;
+    }
+    
+    .clear-storage-btn {
+      background-color: #dc3545;
+    }
+    
+    .clear-storage-btn:hover {
+      background-color: #c82333;
+    }
+    
+    .file-input-wrapper {
+      position: relative;
+      display: inline-block;
+    }
+    
+    .file-input-wrapper input[type="file"] {
+      position: absolute;
+      left: -9999px;
+    }
+    
+    .file-input-wrapper label {
+      display: inline-block;
+      padding: 10px 20px;
+      background-color: #ffc107;
+      color: #212529;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background-color 0.3s;
+    }
+    
+    .file-input-wrapper label:hover {
+      background-color: #e0a800;
+    }
+    
+    .session-preferences {
+      margin-top: 15px;
+      padding: 15px;
+      background-color: #f8f9fa;
+      border-radius: 5px;
+    }
+    
+    .preference-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    
+    .preference-item label {
+      font-weight: bold;
+      color: #495057;
+    }
+    
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 24px;
+    }
+    
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 24px;
+    }
+    
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+    
+    input:checked + .slider {
+      background-color: #2196f3;
+    }
+    
+    input:checked + .slider:before {
+      transform: translateX(26px);
+    }
   </style>
 </head>
 <body>
@@ -150,6 +284,45 @@
         <input id="newQuoteCategory" type="text" placeholder="Enter quote category" />
       </div>
       <button onclick="addQuote()">Add Quote</button>
+    </div>
+
+    <!-- Storage and Import/Export section -->
+    <div class="storage-section">
+      <h3>Data Management</h3>
+      <div class="storage-controls">
+        <button class="export-btn" onclick="exportToJson()">Export Quotes (JSON)</button>
+        <div class="file-input-wrapper">
+          <input type="file" id="importFile" accept=".json" onchange="importFromJsonFile(event)" />
+          <label for="importFile">Import Quotes (JSON)</label>
+        </div>
+        <button class="clear-storage-btn" onclick="clearAllStorage()">Clear All Data</button>
+      </div>
+      
+      <!-- Session Preferences -->
+      <div class="session-preferences">
+        <h4>Session Preferences</h4>
+        <div class="preference-item">
+          <label for="autoSave">Auto-save to Local Storage:</label>
+          <label class="toggle-switch">
+            <input type="checkbox" id="autoSave" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="preference-item">
+          <label for="rememberLastQuote">Remember Last Quote:</label>
+          <label class="toggle-switch">
+            <input type="checkbox" id="rememberLastQuote">
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="preference-item">
+          <label for="darkMode">Dark Mode:</label>
+          <label class="toggle-switch">
+            <input type="checkbox" id="darkMode">
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
     </div>
 
     <!-- Statistics -->

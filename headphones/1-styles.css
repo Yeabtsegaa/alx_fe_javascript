@@ -1,0 +1,189 @@
+
+header{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+}
+body{
+    
+    height: 100vh;
+    margin:0px
+}
+.landing_page{
+    height: 100%;
+    background-image: url(headphones_hero_1.jpg);
+    background-repeat: no-repeat;
+    background-size: 100% 100% ;
+    background-attachment: scroll;
+
+
+}
+.logo img{
+    width:50%;
+}
+.logo{
+    display:flex;
+    justify-content: center;
+}
+a:hover{
+    background-color: #FF6565;
+}
+a:active{
+    background-color: #FF6565;
+}
+.links a{
+    display: inline;
+    margin: 10px 10px 0px 10px;
+    text-decoration: none;
+    color:rgb(255, 255, 255);
+    text-transform: capitalize;
+    font-family: sans-serif;
+    font-size: 0.8em;
+    padding: 5px;
+    border-radius: 10px;;
+}
+.hero_text{
+    position: relative;
+    top: 40%;
+    width:50%;
+    left: 50%;
+    translate: -50%;
+}
+.hero_text h2,h3{
+    text-align: center;
+    color:white;
+}
+.hero_text h2{
+    font-size: 2em;
+    font-family: sans-serif;
+}
+.hero_text h3{
+    font-size: 1em;
+    font-family: sans-serif;
+}
+.description{
+    position: relative;
+    top:45%;
+    width:50%;
+    left: 50%;
+    translate: -50%;
+}
+button:hover{
+    opacity: 0.8;
+}
+button:active{
+    opacity: 0.8;
+}
+button{
+    width:150px;
+    position: relative;
+    top: 45%;
+    left: 50%;
+    translate: -50%;
+    margin-bottom: 30px;
+    border-radius: 20px;
+    border-color: #FF6565;
+    background-color: #FF6565;
+    padding: 10px;
+    color: white;
+}
+.description p{
+    text-align: center;
+    font-family: sans-serif;
+    color:white;
+}
+.humburger{
+    position:absolute;
+    top: 40px;
+    left: 20px;
+    font-size: 1.5em;
+    display: none;
+}
+
+
+.what{
+
+}
+.title{
+
+    width:40%;
+    position: relative;
+    left: 50%;
+    translate: -50%;
+    margin: 50px 0px;
+}
+.title h2{
+    text-align: center;
+    font-family: sans-serif;
+}
+.description2{
+    width:60%;
+    position: relative;
+    left: 50%;
+    translate: -50%;
+}
+.description2 p{
+    text-align: center;
+    font: 0.9em sans-serif;
+}
+.card-h{
+    display: flex;
+    margin: 50px 0px;
+    width: 80%;
+    position: relative;
+    left:50%;
+    translate: -50%;
+}
+.card{
+    margin: 0px 10px;
+}
+.card-h img{
+    width: 50%;
+    position: relative;
+    left:50%;
+    translate: -50%;
+}
+.card h4,p{
+    text-align: center;
+    font:sans-serif;
+}
+@media(max-width:480px){
+    .hero_text {
+        width: 90%;
+    }
+    button{
+        top:40%;
+        padding: 20px;
+    }
+    .description{
+        top: 40%;
+        width: 90%;
+    }
+    section{
+        background-size: 40rem 100%;
+        background-position-x: center;
+    }
+    .links{
+        display:none;
+    }
+    .logo img{
+        position: relative;
+        top:30px;
+        left: 50px;
+        width:80%
+    }
+    .humburger{
+        background-color:#b8b5b5;
+        display: block;
+    }
+    .card-h{
+        display:block;
+    }
+    .title2{
+        width:80%;
+        position:relative;
+        left:50%;
+        translate:-50%;
+    }
+}

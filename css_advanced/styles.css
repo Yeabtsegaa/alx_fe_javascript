@@ -1,0 +1,328 @@
+
+.bg{
+    background-image:  radial-gradient(circle at center, transparent 5%,#071629 95% ), linear-gradient(to top, #071629 20%, transparent), url(smile.png);
+    background-repeat: no-repeat;
+    background-attachment: scroll;
+    background-position-x: center;
+    background-size: 100% 100%;
+    
+}
+body{
+    background-color: #071629;
+    overflow-x: scroll;
+}
+header{
+    font-size: 10px;
+}
+
+img[alt="logo"]{
+    position:relative;
+    left:10%;
+    width: 10%;
+    height: auto;
+}
+ul{
+    width:30%;
+    position: absolute;
+    left:70%;
+    top: -0%;
+    margin-bottom: 20px; 
+    margin-top: 20px;
+}
+li{
+    display:inline;
+    margin:10px 30px;
+}
+li a{
+    color:white;
+    text-decoration: none;
+    font-family: sans-serif;
+    padding:5px;
+    translate:40%;
+    
+}
+li a:hover{
+    background-color: #C271FF;
+    transform: scale(1.2);
+}
+main{
+    margin:20px 0px;
+}
+.hero{
+    margin: 30px 0px;
+    
+}
+.hero-words{
+    position:relative;
+    display:block;
+    text-align: center;
+    margin-top: 9rem;
+}
+.hero-words h1{
+    font-size:7rem;
+    font-family: sans-serif;
+    color:white;
+    margin: 10px 0px;
+}
+button{
+    display: block;
+    margin-bottom: 400px;
+    margin-top: 50px;;
+    position:relative;
+    left: 50%;
+    translate:-50%;
+    padding: 20px;
+    background-color: #C271FF;
+    border-radius: 70px;
+    font-family: sans-serif;
+    color:white
+    
+}
+button:hover{
+    box-shadow: 0px 4px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.hero-words span{
+    margin: 0 20px;
+    position: relative;
+    top: -25%;
+    font-family: sans-serif;
+    color: white;
+}
+.lfp h2,h3,p{
+    text-align: center;
+    font-family: sans-serif;
+    color:white;
+    
+}
+
+.lfp h2 span{
+    color:#C271FF
+}
+.lfp h2{
+    margin-bottom: 80px;
+    font-size: 2rem;
+}
+.pros-container{
+    display:flex;
+    flex-direction: row;
+    justify-content: center;
+    gap:100px;
+}
+.pros-container div{
+    width:20%;
+}
+img[alt="pros"]{
+    width:50%;
+    translate: 50%;
+    border-radius: 50%;
+
+}
+
+
+
+
+
+.quote-h{
+    border:1px solid white;
+    width:100vw;
+    translate: 10%;
+    margin-top: 4rem;
+    display: flex;
+    justify-content: center;
+    padding:10px;
+    flex-direction: row;
+    background-color: #C271FF;
+    color: white;
+    position:relative;
+    left: 50%;
+    translate: -50%;
+    padding: 100px 60px;
+}
+.quoter{
+    width:30%;
+    margin: 0px 20px;
+    display:flex;
+    justify-content: center;
+    align-items: center;
+}
+.quoter img{
+    position: relative;
+    border-radius: 50%;
+    width:80%;
+}
+.quote h3, .quote p{
+    text-align:left;
+    font-family: sans-serif;
+}
+blockquote{
+    margin: 20px 0px;
+    font-size: 3rem;
+}
+
+
+
+
+
+
+
+.videos{
+    background-color: white;
+    width: 100vw;
+    padding: 100px 30px;
+}
+.videos h2{
+    text-align: center;
+    color:rgb(0, 0, 0);
+    font-family: sans-serif;
+    margin: 0px 0px 100px 0px;
+    padding: 2rem 0px 0px 0px;
+    font-size: 2rem;
+}
+.videos span{
+    color:#C271FF
+}
+.vid-container{
+    display: flex;
+}
+.video1,.video2,.video3,.video4{
+    width:20%;
+    margin:0px 30px;
+    display: block;
+    justify-content: center;
+    padding:10px 10px;
+}
+.vid-container h3{
+    text-align: start;
+    font-family: sans-serif;
+    color:black;
+}
+.vid-container p{
+    text-align: start;
+    font-family: sans-serif;
+    color:black;
+}
+.vid-container video{
+    width: 100%;
+}
+.rater{
+    display:flex;
+    align-items: center;;
+}
+.rater h4{
+    color:#C271FF;
+    font-family: sans-serif;
+}
+img[alt="pro1"]{
+    width:10%;
+    border-radius: 50%;
+    margin: 20px 20px;
+}
+.rating{
+    display: flex;
+    justify-content: space-between;
+    
+}
+
+
+
+
+.membership{
+    width:100vw;
+    padding: 30px 30px;
+}
+.membership h2{
+    text-align: center;
+    font-family: sans-serif;
+    color: white;
+    margin-top: 50px;
+}
+.membership span{
+    color:#C271FF
+}
+.membership h3 .membership p{
+    font-family: sans-serif;
+}
+.box-container{
+    display:flex;
+    flex-direction: row;
+    justify-content: space-between;
+    margin: 20px 30px;
+    width:60%;
+    
+    position: relative;
+    left:20%;
+    margin-top: 50px;
+}
+.box{
+    width:20%;
+    
+    margin: 0px 70px 0px 0px;
+}
+img[alt="logo2"]{
+    width: 30%;
+    position:relative;
+    left:50%;
+    translate: -50%
+}
+.button2 button{
+    margin: 50px 0px 50px 0px;
+}
+
+
+
+
+.faq{
+    border:1px solid white;
+    width:100vw;
+    background-color: white;
+}
+.faq h2{
+    text-align: center;
+    font-size: 3rem;
+    font-family: sans-serif;
+}
+.q-h{
+    display: grid;
+    grid-template-columns: repeat(2, 40%);
+    width:70%;
+    position: relative;
+    left:60%;
+    translate:-50%;
+}
+.q h3, .q p{
+    text-align: start;
+    font-family: sans-serif;
+    color:black;
+}
+.q p{
+    color:rgb(0, 0, 0, 0.6);
+}
+.q{
+    margin: 20px 40px;
+}
+
+
+
+
+.contact{
+    display: flex;
+    justify-content: space-between;
+    padding: 50px;
+}
+.contact img{
+    width:15%;
+    margin-top: 10px;
+    margin-left:30px;
+}
+.icon img{
+    margin:0px 10px;
+    width:10%;
+    margin-top: 10px;
+}
+footer p{
+    font-size: 0.5rem;
+    color:rgba(245, 245, 245, 0.5);
+}
+
+
