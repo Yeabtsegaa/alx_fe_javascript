@@ -302,6 +302,19 @@
         <button class="clear-storage-btn" onclick="clearAllStorage()">Clear All Data</button>
       </div>
       
+      <!-- Server Sync Section -->
+      <div class="sync-section" style="margin-top: 20px; padding: 15px; background-color: #e8f5e8; border-radius: 5px; border-left: 4px solid #28a745;">
+        <h4 style="margin-top: 0; color: #155724;">Server Synchronization</h4>
+        <div id="syncStatus" style="margin-bottom: 15px;">
+          <!-- Sync status will be populated by JavaScript -->
+        </div>
+        <div class="sync-controls" style="display: flex; gap: 10px; flex-wrap: wrap;">
+          <button onclick="manualSync()" style="background-color: #28a745;">Sync Now</button>
+          <button onclick="forceSync()" style="background-color: #ffc107; color: #212529;">Force Sync</button>
+          <button onclick="testSyncFunctionality()" style="background-color: #17a2b8;">Test Sync</button>
+        </div>
+      </div>
+      
       <!-- Session Preferences -->
       <div class="session-preferences">
         <h4>Session Preferences</h4>
@@ -325,6 +338,17 @@
             <input type="checkbox" id="darkMode">
             <span class="slider"></span>
           </label>
+        </div>
+        <div class="preference-item">
+          <label for="autoSync">Auto-sync with Server:</label>
+          <label class="toggle-switch">
+            <input type="checkbox" id="autoSync" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="preference-item">
+          <label for="syncInterval">Sync Interval (seconds):</label>
+          <input type="number" id="syncInterval" value="30" min="10" max="300" style="width: 80px; padding: 5px;">
         </div>
       </div>
     </div>
