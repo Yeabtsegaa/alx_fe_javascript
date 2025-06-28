@@ -32,7 +32,7 @@ document.getElementById('clearQuotes').addEventListener('click', clearDisplay);
 window.addEventListener('online', () => {
     isOnline = true;
     showNotification('Connection restored. Syncing with server...', 'success');
-    syncWithServer();
+    syncQuotes();
 });
 
 window.addEventListener('offline', () => {
@@ -49,74 +49,123 @@ function init() {
     loadFromLocalStorage();
 }
 
-// Server simulation functions
-async function fetchFromServer() {
+// Mock API functions using JSONPlaceholder simulation
+async function fetchQuotesFromServer() {
     try {
-        // Simulate server delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Simulate JSONPlaceholder API call
+        const response = await fetch('https://jsonplaceholder.typicode.com/posts?_limit=10');
         
-        // Simulate server response with some additional quotes
-        const serverQuotes = [
-            { text: "The only way to do great work is to love what you do.", category: "Motivation" },
-            { text: "Life is what happens when you're busy making other plans.", category: "Life" },
-            { text: "The future belongs to those who believe in the beauty of their dreams.", category: "Dreams" },
-            { text: "Success is not final, failure is not fatal: it is the courage to continue that counts.", category: "Success" },
-            { text: "In the middle of difficulty lies opportunity.", category: "Opportunity" },
-            { text: "The best way to predict the future is to create it.", category: "Future" },
-            { text: "Don't watch the clock; do what it does. Keep going.", category: "Persistence" },
-            { text: "The only limit to our realization of tomorrow is our doubts of today.", category: "Belief" },
-            // Additional server quotes
-            { text: "Innovation distinguishes between a leader and a follower.", category: "Leadership" },
-            { text: "The journey of a thousand miles begins with one step.", category: "Motivation" },
-            { text: "What you get by achieving your goals is not as important as what you become by achieving your goals.", category: "Success" }
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const posts = await response.json();
+        
+        // Convert posts to quotes format
+        const serverQuotes = posts.map((post, index) => ({
+            text: post.title,
+            category: getRandomCategory(),
+            id: post.id
+        }));
+        
+        // Add some predefined quotes to simulate server data
+        const additionalQuotes = [
+            { text: "Innovation distinguishes between a leader and a follower.", category: "Leadership", id: 101 },
+            { text: "The journey of a thousand miles begins with one step.", category: "Motivation", id: 102 },
+            { text: "What you get by achieving your goals is not as important as what you become by achieving your goals.", category: "Success", id: 103 },
+            { text: "The only impossible journey is the one you never begin.", category: "Motivation", id: 104 },
+            { text: "Believe you can and you're halfway there.", category: "Belief", id: 105 }
         ];
         
-        return serverQuotes;
-    } catch (error) {
-        console.error('Error fetching from server:', error);
-        throw error;
-    }
-}
-
-async function postToServer(quotesData) {
-    try {
-        // Simulate server delay
-        await new Promise(resolve => setTimeout(resolve, 800));
+        return [...serverQuotes, ...additionalQuotes];
         
-        // Simulate successful post
-        return { success: true, message: 'Data synced successfully' };
     } catch (error) {
-        console.error('Error posting to server:', error);
+        console.error('Error fetching quotes from server:', error);
+        
+        // Fallback to mock data if API fails
+        return [
+            { text: "Innovation distinguishes between a leader and a follower.", category: "Leadership", id: 101 },
+            { text: "The journey of a thousand miles begins with one step.", category: "Motivation", id: 102 },
+            { text: "What you get by achieving your goals is not as important as what you become by achieving your goals.", category: "Success", id: 103 },
+            { text: "The only impossible journey is the one you never begin.", category: "Motivation", id: 104 },
+            { text: "Believe you can and you're halfway there.", category: "Belief", id: 105 }
+        ];
+    }
+}
+
+async function postQuotesToServer(quotesData) {
+    try {
+        // Simulate posting to JSONPlaceholder API
+        const response = await fetch('https://jsonplaceholder.typicode.com/posts', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                title: 'Quote Sync',
+                body: JSON.stringify(quotesData),
+                userId: 1
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        console.log('Data posted to server successfully:', result);
+        
+        return { success: true, message: 'Data synced successfully', id: result.id };
+        
+    } catch (error) {
+        console.error('Error posting quotes to server:', error);
         throw error;
     }
 }
 
-// Sync functions
-async function syncWithServer() {
-    if (syncInProgress || !isOnline) return;
+// Helper function to get random category
+function getRandomCategory() {
+    const categories = ['Motivation', 'Success', 'Life', 'Leadership', 'Belief', 'Dreams', 'Persistence', 'Opportunity'];
+    return categories[Math.floor(Math.random() * categories.length)];
+}
+
+// Legacy function for backward compatibility
+async function fetchFromServer() {
+    return await fetchQuotesFromServer();
+}
+
+// Main sync function
+async function syncQuotes() {
+    if (syncInProgress || !isOnline) {
+        if (!isOnline) {
+            showNotification('Cannot sync while offline.', 'error');
+        }
+        return;
+    }
     
     syncInProgress = true;
-    updateSyncStatus('Syncing...', 'syncing');
+    updateSyncStatus('Syncing quotes with server...', 'syncing');
     
     try {
-        // Fetch latest data from server
-        const serverQuotes = await fetchFromServer();
+        // Fetch latest quotes from server
+        const serverQuotes = await fetchQuotesFromServer();
         
-        // Detect conflicts and merge data
-        const mergedQuotes = mergeQuotes(quotes, serverQuotes);
+        // Merge local and server data with conflict resolution
+        const mergeResult = mergeQuotesWithConflicts(quotes, serverQuotes);
         
-        // Check if there were conflicts
-        if (mergedQuotes.conflicts.length > 0) {
-            handleConflicts(mergedQuotes.conflicts, mergedQuotes.quotes);
+        if (mergeResult.conflicts.length > 0) {
+            // Handle conflicts
+            handleQuoteConflicts(mergeResult.conflicts, mergeResult.mergedQuotes);
         } else {
-            quotes = mergedQuotes.quotes;
+            // No conflicts, update directly
+            quotes = mergeResult.mergedQuotes;
             saveToLocalStorage();
             updateUI();
-            showNotification('Data synced successfully!', 'success');
+            showNotification(`${mergeResult.newQuotesCount} new quotes synced!`, 'success');
         }
         
         // Post local changes to server
-        await postToServer(quotes);
+        await postQuotesToServer(quotes);
         
         lastSyncTime = new Date();
         updateSyncStatus('Last synced: ' + lastSyncTime.toLocaleTimeString(), 'success');
@@ -129,19 +178,22 @@ async function syncWithServer() {
     }
 }
 
-function mergeQuotes(localQuotes, serverQuotes) {
+// Enhanced merge function with conflict detection
+function mergeQuotesWithConflicts(localQuotes, serverQuotes) {
     const conflicts = [];
     const mergedQuotes = [...localQuotes];
+    let newQuotesCount = 0;
     
-    // Find conflicts (quotes with same text but different categories)
     serverQuotes.forEach(serverQuote => {
+        // Check if quote exists locally by text content
         const localIndex = mergedQuotes.findIndex(q => q.text === serverQuote.text);
         
         if (localIndex === -1) {
             // New quote from server
             mergedQuotes.push(serverQuote);
+            newQuotesCount++;
         } else if (mergedQuotes[localIndex].category !== serverQuote.category) {
-            // Conflict detected
+            // Conflict detected - same quote, different category
             conflicts.push({
                 local: mergedQuotes[localIndex],
                 server: serverQuote,
@@ -150,15 +202,20 @@ function mergeQuotes(localQuotes, serverQuotes) {
         }
     });
     
-    return { quotes: mergedQuotes, conflicts };
+    return { 
+        mergedQuotes, 
+        conflicts, 
+        newQuotesCount 
+    };
 }
 
-function handleConflicts(conflicts, mergedQuotes) {
+// Enhanced conflict handling
+function handleQuoteConflicts(conflicts, mergedQuotes) {
     const conflictDialog = document.createElement('div');
     conflictDialog.className = 'conflict-dialog';
     conflictDialog.innerHTML = `
         <div class="conflict-content">
-            <h3>Data Conflicts Detected</h3>
+            <h3>Quote Conflicts Detected</h3>
             <p>${conflicts.length} conflict(s) found. Please resolve them:</p>
             ${conflicts.map((conflict, index) => `
                 <div class="conflict-item">
@@ -176,9 +233,9 @@ function handleConflicts(conflicts, mergedQuotes) {
                 </div>
             `).join('')}
             <div class="conflict-actions">
-                <button onclick="resolveConflicts()">Resolve Conflicts</button>
-                <button onclick="useServerData()">Use Server Data</button>
-                <button onclick="cancelConflictResolution()">Cancel</button>
+                <button onclick="resolveQuoteConflicts()">Resolve Conflicts</button>
+                <button onclick="useServerQuoteData()">Use Server Data</button>
+                <button onclick="cancelQuoteConflictResolution()">Cancel</button>
             </div>
         </div>
     `;
@@ -186,13 +243,13 @@ function handleConflicts(conflicts, mergedQuotes) {
     document.body.appendChild(conflictDialog);
     
     // Store conflicts for resolution
-    window.currentConflicts = conflicts;
-    window.mergedQuotes = mergedQuotes;
+    window.currentQuoteConflicts = conflicts;
+    window.mergedQuoteData = mergedQuotes;
 }
 
-function resolveConflicts() {
-    const conflicts = window.currentConflicts;
-    const mergedQuotes = window.mergedQuotes;
+function resolveQuoteConflicts() {
+    const conflicts = window.currentQuoteConflicts;
+    const mergedQuotes = window.mergedQuoteData;
     
     conflicts.forEach((conflict, index) => {
         const selected = document.querySelector(`input[name="conflict-${index}"]:checked`).value;
@@ -205,41 +262,59 @@ function resolveConflicts() {
     quotes = mergedQuotes;
     saveToLocalStorage();
     updateUI();
-    showNotification('Conflicts resolved successfully!', 'success');
+    showNotification('Quote conflicts resolved successfully!', 'success');
     
     // Clean up
     document.querySelector('.conflict-dialog').remove();
-    delete window.currentConflicts;
-    delete window.mergedQuotes;
+    delete window.currentQuoteConflicts;
+    delete window.mergedQuoteData;
 }
 
-function useServerData() {
-    quotes = window.mergedQuotes;
+function useServerQuoteData() {
+    quotes = window.mergedQuoteData;
     saveToLocalStorage();
     updateUI();
-    showNotification('Using server data for all conflicts.', 'info');
+    showNotification('Using server data for all quote conflicts.', 'info');
     
     // Clean up
     document.querySelector('.conflict-dialog').remove();
-    delete window.currentConflicts;
-    delete window.mergedQuotes;
+    delete window.currentQuoteConflicts;
+    delete window.mergedQuoteData;
 }
 
-function cancelConflictResolution() {
+function cancelQuoteConflictResolution() {
     document.querySelector('.conflict-dialog').remove();
-    delete window.currentConflicts;
-    delete window.mergedQuotes;
-    showNotification('Conflict resolution cancelled.', 'warning');
+    delete window.currentQuoteConflicts;
+    delete window.mergedQuoteData;
+    showNotification('Quote conflict resolution cancelled.', 'warning');
 }
 
-// Periodic sync
+// Periodic sync for checking new quotes
 function startPeriodicSync() {
-    // Sync every 30 seconds
+    // Check for new quotes every 30 seconds
     syncInterval = setInterval(() => {
         if (isOnline && !syncInProgress) {
-            syncWithServer();
+            checkForNewQuotes();
         }
     }, 30000);
+}
+
+async function checkForNewQuotes() {
+    try {
+        const serverQuotes = await fetchQuotesFromServer();
+        const mergeResult = mergeQuotesWithConflicts(quotes, serverQuotes);
+        
+        if (mergeResult.newQuotesCount > 0) {
+            showNotification(`${mergeResult.newQuotesCount} new quotes available!`, 'info');
+        }
+        
+        if (mergeResult.conflicts.length > 0) {
+            showNotification(`${mergeResult.conflicts.length} conflicts detected. Please resolve them.`, 'warning');
+        }
+        
+    } catch (error) {
+        console.error('Error checking for new quotes:', error);
+    }
 }
 
 function stopPeriodicSync() {
@@ -249,13 +324,17 @@ function stopPeriodicSync() {
     }
 }
 
-// Local storage functions
+// Local storage functions with enhanced error handling
 function saveToLocalStorage() {
     try {
         localStorage.setItem('quotes', JSON.stringify(quotes));
         localStorage.setItem('lastSync', new Date().toISOString());
+        localStorage.setItem('quoteCount', quotes.length.toString());
+        
+        console.log('Quotes saved to localStorage:', quotes.length);
     } catch (error) {
         console.error('Error saving to localStorage:', error);
+        showNotification('Failed to save quotes locally.', 'error');
     }
 }
 
@@ -265,6 +344,7 @@ function loadFromLocalStorage() {
         if (savedQuotes) {
             quotes = JSON.parse(savedQuotes);
             updateUI();
+            console.log('Quotes loaded from localStorage:', quotes.length);
         }
         
         const lastSync = localStorage.getItem('lastSync');
@@ -274,6 +354,7 @@ function loadFromLocalStorage() {
         }
     } catch (error) {
         console.error('Error loading from localStorage:', error);
+        showNotification('Failed to load saved quotes.', 'error');
     }
 }
 
@@ -319,7 +400,37 @@ function manualSync() {
         return;
     }
     
-    syncWithServer();
+    syncQuotes();
+}
+
+// Legacy function for backward compatibility
+async function syncWithServer() {
+    return await syncQuotes();
+}
+
+// Legacy function for backward compatibility
+function mergeQuotes(localQuotes, serverQuotes) {
+    return mergeQuotesWithConflicts(localQuotes, serverQuotes);
+}
+
+// Legacy function for backward compatibility
+function handleConflicts(conflicts, mergedQuotes) {
+    return handleQuoteConflicts(conflicts, mergedQuotes);
+}
+
+// Legacy function for backward compatibility
+function resolveConflicts() {
+    return resolveQuoteConflicts();
+}
+
+// Legacy function for backward compatibility
+function useServerData() {
+    return useServerQuoteData();
+}
+
+// Legacy function for backward compatibility
+function cancelConflictResolution() {
+    return cancelQuoteConflictResolution();
 }
 
 // Show a random quote
