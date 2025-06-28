@@ -1,369 +1,175 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Dynamic Quote Generator</title>
-  <style>
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 20px;
-      background-color: #f5f5f5;
-    }
-    
-    h1 {
-      text-align: center;
-      color: #333;
-      margin-bottom: 30px;
-    }
-    
-    .container {
-      background: white;
-      padding: 30px;
-      border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    }
-    
-    #quoteDisplay {
-      margin-bottom: 20px;
-      font-size: 1.3em;
-      font-style: italic;
-      text-align: center;
-      min-height: 60px;
-      padding: 20px;
-      background-color: #f8f9fa;
-      border-radius: 8px;
-      border-left: 4px solid #007bff;
-    }
-    
-    .controls {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
-    }
-    
-    button {
-      padding: 10px 20px;
-      background-color: #007bff;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 14px;
-      transition: background-color 0.3s;
-    }
-    
-    button:hover {
-      background-color: #0056b3;
-    }
-    
-    .form-section {
-      margin-top: 30px;
-      padding: 20px;
-      background-color: #f8f9fa;
-      border-radius: 8px;
-    }
-    
-    .form-section h3 {
-      margin-top: 0;
-      color: #333;
-    }
-    
-    .form-group {
-      margin-bottom: 15px;
-    }
-    
-    input[type="text"], select {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid #ddd;
-      border-radius: 5px;
-      font-size: 14px;
-      box-sizing: border-box;
-    }
-    
-    .category-filter {
-      margin-bottom: 20px;
-    }
-    
-    .stats {
-      margin-top: 20px;
-      padding: 15px;
-      background-color: #e9ecef;
-      border-radius: 5px;
-      font-size: 14px;
-    }
-    
-    .quote-list {
-      margin-top: 20px;
-      max-height: 300px;
-      overflow-y: auto;
-    }
-    
-    .quote-item {
-      padding: 10px;
-      margin: 5px 0;
-      background-color: #f8f9fa;
-      border-radius: 5px;
-      border-left: 3px solid #007bff;
-    }
-    
-    .quote-category {
-      font-size: 12px;
-      color: #666;
-      font-weight: bold;
-    }
-    
-    .storage-section {
-      margin-top: 20px;
-      padding: 20px;
-      background-color: #e3f2fd;
-      border-radius: 8px;
-      border-left: 4px solid #2196f3;
-    }
-    
-    .storage-section h3 {
-      margin-top: 0;
-      color: #1976d2;
-    }
-    
-    .storage-controls {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 15px;
-      flex-wrap: wrap;
-    }
-    
-    .export-btn {
-      background-color: #28a745;
-    }
-    
-    .export-btn:hover {
-      background-color: #218838;
-    }
-    
-    .import-btn {
-      background-color: #ffc107;
-      color: #212529;
-    }
-    
-    .import-btn:hover {
-      background-color: #e0a800;
-    }
-    
-    .clear-storage-btn {
-      background-color: #dc3545;
-    }
-    
-    .clear-storage-btn:hover {
-      background-color: #c82333;
-    }
-    
-    .file-input-wrapper {
-      position: relative;
-      display: inline-block;
-    }
-    
-    .file-input-wrapper input[type="file"] {
-      position: absolute;
-      left: -9999px;
-    }
-    
-    .file-input-wrapper label {
-      display: inline-block;
-      padding: 10px 20px;
-      background-color: #ffc107;
-      color: #212529;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 14px;
-      transition: background-color 0.3s;
-    }
-    
-    .file-input-wrapper label:hover {
-      background-color: #e0a800;
-    }
-    
-    .session-preferences {
-      margin-top: 15px;
-      padding: 15px;
-      background-color: #f8f9fa;
-      border-radius: 5px;
-    }
-    
-    .preference-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
-    }
-    
-    .preference-item label {
-      font-weight: bold;
-      color: #495057;
-    }
-    
-    .toggle-switch {
-      position: relative;
-      display: inline-block;
-      width: 50px;
-      height: 24px;
-    }
-    
-    .toggle-switch input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
-    
-    .slider {
-      position: absolute;
-      cursor: pointer;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-color: #ccc;
-      transition: .4s;
-      border-radius: 24px;
-    }
-    
-    .slider:before {
-      position: absolute;
-      content: "";
-      height: 16px;
-      width: 16px;
-      left: 4px;
-      bottom: 4px;
-      background-color: white;
-      transition: .4s;
-      border-radius: 50%;
-    }
-    
-    input:checked + .slider {
-      background-color: #2196f3;
-    }
-    
-    input:checked + .slider:before {
-      transform: translateX(26px);
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Quote Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        
+        #quoteDisplay {
+            background-color: #f8f9fa;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+            border-left: 4px solid #007bff;
+            font-size: 18px;
+            min-height: 60px;
+        }
+        
+        .controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        button:hover {
+            background-color: #0056b3;
+        }
+        
+        .form-section {
+            margin: 20px 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+        
+        .form-group {
+            margin: 10px 0;
+        }
+        
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        
+        .category-filter {
+            margin: 20px 0;
+        }
+        
+        select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        
+        .quote-list {
+            margin-top: 20px;
+        }
+        
+        .quote-item {
+            background-color: #f8f9fa;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 4px solid #28a745;
+        }
+        
+        .quote-text {
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+        
+        .quote-category {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .delete-btn {
+            background-color: #dc3545;
+            float: right;
+        }
+        
+        .delete-btn:hover {
+            background-color: #c82333;
+        }
+        
+        .stats {
+            background-color: #e9ecef;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            text-align: center;
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Dynamic Quote Generator</h1>
-
-    <!-- Quote display area -->
-    <div id="quoteDisplay">Click "Show New Quote" to get started!</div>
-
-    <!-- Controls section -->
-    <div class="controls">
-      <button id="newQuote">Show New Quote</button>
-      <button id="showAllQuotes">Show All Quotes</button>
-      <button id="clearQuotes">Clear Display</button>
-      <button onclick="testPopulateCategories()" style="background-color: #6c757d;">Test Categories</button>
-      <button onclick="testWebStorage()" style="background-color: #17a2b8;">Test Storage</button>
-      <button onclick="createSampleJsonData()" style="background-color: #28a745;">Create Sample JSON</button>
+    <div class="container">
+        <h1>Dynamic Quote Generator</h1>
+        
+        <!-- Quote display area -->
+        <div id="quoteDisplay">Click "Show New Quote" to get started!</div>
+        
+        <!-- Controls section -->
+        <div class="controls">
+            <button id="newQuote">Show New Quote</button>
+            <button id="showAllQuotes">Show All Quotes</button>
+            <button id="clearQuotes">Clear Display</button>
+        </div>
+        
+        <!-- Category filter -->
+        <div class="category-filter">
+            <label for="categoryFilter">Filter by Category:</label>
+            <select id="categoryFilter" onchange="filterQuotes()">
+                <option value="all">All Categories</option>
+            </select>
+        </div>
+        
+        <!-- Quote addition form -->
+        <div class="form-section">
+            <h3>Add New Quote</h3>
+            <div class="form-group">
+                <input id="newQuoteText" type="text" placeholder="Enter a new quote" />
+            </div>
+            <div class="form-group">
+                <input id="newQuoteCategory" type="text" placeholder="Enter quote category" />
+            </div>
+            <button onclick="addQuote()">Add Quote</button>
+        </div>
+        
+        <!-- Statistics -->
+        <div class="stats" id="stats">
+            <!-- Stats will be populated by JavaScript -->
+        </div>
+        
+        <!-- Quote list -->
+        <div class="quote-list" id="quoteList">
+            <!-- Quote list will be populated by JavaScript -->
+        </div>
     </div>
-
-    <!-- Category filter -->
-    <div class="category-filter">
-      <label for="categoryFilter">Filter by Category:</label>
-      <select id="categoryFilter" onchange="filterQuotes()">
-        <option value="all">All Categories</option>
-        <!-- Dynamically populated categories -->
-      </select>
-    </div>
-
-    <!-- Quote addition form -->
-    <div class="form-section">
-      <h3>Add New Quote</h3>
-      <div class="form-group">
-        <input id="newQuoteText" type="text" placeholder="Enter a new quote" />
-      </div>
-      <div class="form-group">
-        <input id="newQuoteCategory" type="text" placeholder="Enter quote category" />
-      </div>
-      <button onclick="addQuote()">Add Quote</button>
-    </div>
-
-    <!-- Storage and Import/Export section -->
-    <div class="storage-section">
-      <h3>Data Management</h3>
-      <div class="storage-controls">
-        <button class="export-btn" onclick="exportToJson()">Export Quotes (JSON)</button>
-        <div class="file-input-wrapper">
-          <input type="file" id="importFile" accept=".json" onchange="importFromJsonFile(event)" />
-          <label for="importFile">Import Quotes (JSON)</label>
-        </div>
-        <button class="clear-storage-btn" onclick="clearAllStorage()">Clear All Data</button>
-      </div>
-      
-      <!-- Server Sync Section -->
-      <div class="sync-section" style="margin-top: 20px; padding: 15px; background-color: #e8f5e8; border-radius: 5px; border-left: 4px solid #28a745;">
-        <h4 style="margin-top: 0; color: #155724;">Server Synchronization</h4>
-        <div id="syncStatus" style="margin-bottom: 15px;">
-          <!-- Sync status will be populated by JavaScript -->
-        </div>
-        <div class="sync-controls" style="display: flex; gap: 10px; flex-wrap: wrap;">
-          <button onclick="manualSync()" style="background-color: #28a745;">Sync Now</button>
-          <button onclick="forceSync()" style="background-color: #ffc107; color: #212529;">Force Sync</button>
-          <button onclick="testSyncFunctionality()" style="background-color: #17a2b8;">Test Sync</button>
-        </div>
-      </div>
-      
-      <!-- Session Preferences -->
-      <div class="session-preferences">
-        <h4>Session Preferences</h4>
-        <div class="preference-item">
-          <label for="autoSave">Auto-save to Local Storage:</label>
-          <label class="toggle-switch">
-            <input type="checkbox" id="autoSave" checked>
-            <span class="slider"></span>
-          </label>
-        </div>
-        <div class="preference-item">
-          <label for="rememberLastQuote">Remember Last Quote:</label>
-          <label class="toggle-switch">
-            <input type="checkbox" id="rememberLastQuote">
-            <span class="slider"></span>
-          </label>
-        </div>
-        <div class="preference-item">
-          <label for="darkMode">Dark Mode:</label>
-          <label class="toggle-switch">
-            <input type="checkbox" id="darkMode">
-            <span class="slider"></span>
-          </label>
-        </div>
-        <div class="preference-item">
-          <label for="autoSync">Auto-sync with Server:</label>
-          <label class="toggle-switch">
-            <input type="checkbox" id="autoSync" checked>
-            <span class="slider"></span>
-          </label>
-        </div>
-        <div class="preference-item">
-          <label for="syncInterval">Sync Interval (seconds):</label>
-          <input type="number" id="syncInterval" value="30" min="10" max="300" style="width: 80px; padding: 5px;">
-        </div>
-      </div>
-    </div>
-
-    <!-- Statistics -->
-    <div class="stats" id="stats">
-      <!-- Stats will be populated by JavaScript -->
-    </div>
-
-    <!-- Quote list -->
-    <div class="quote-list" id="quoteList">
-      <!-- Quote list will be populated by JavaScript -->
-    </div>
-  </div>
-
-  <script src="script.js"></script>
+    
+    <script src="script.js"></script>
 </body>
 </html>
