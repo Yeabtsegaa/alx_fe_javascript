@@ -131,9 +131,15 @@ function loadSessionData() {
   }
 }
 
-// JSON Import/Export Functions
+// Enhanced JSON Import/Export Functions with better validation
 function exportToJson() {
   try {
+    // Validate quotes before export
+    if (!quotes || quotes.length === 0) {
+      showNotification('No quotes to export!', 'error');
+      return;
+    }
+
     const dataStr = JSON.stringify(quotes, null, 2);
     const dataBlob = new Blob([dataStr], { type: 'application/json' });
     const url = URL.createObjectURL(dataBlob);
@@ -146,7 +152,7 @@ function exportToJson() {
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
     
-    showNotification('Quotes exported successfully!', 'success');
+    showNotification(`Exported ${quotes.length} quotes successfully!`, 'success');
   } catch (error) {
     console.error('Error exporting quotes:', error);
     showNotification('Error exporting quotes', 'error');
@@ -156,6 +162,20 @@ function exportToJson() {
 function importFromJsonFile(event) {
   const file = event.target.files[0];
   if (!file) return;
+
+  // Validate file type
+  if (!file.name.toLowerCase().endsWith('.json')) {
+    showNotification('Please select a valid JSON file', 'error');
+    event.target.value = '';
+    return;
+  }
+
+  // Validate file size (max 1MB)
+  if (file.size > 1024 * 1024) {
+    showNotification('File too large. Please select a file smaller than 1MB', 'error');
+    event.target.value = '';
+    return;
+  }
 
   const fileReader = new FileReader();
   
@@ -168,17 +188,44 @@ function importFromJsonFile(event) {
         throw new Error('Invalid JSON format: expected an array');
       }
       
+      if (importedQuotes.length === 0) {
+        throw new Error('JSON file contains no quotes');
+      }
+      
       // Validate each quote object
-      const validQuotes = importedQuotes.filter(quote => {
-        return quote && typeof quote.text === 'string' && typeof quote.category === 'string';
+      const validQuotes = [];
+      const invalidQuotes = [];
+      
+      importedQuotes.forEach((quote, index) => {
+        if (quote && typeof quote.text === 'string' && typeof quote.category === 'string' && 
+            quote.text.trim().length > 0 && quote.category.trim().length > 0) {
+          validQuotes.push({
+            text: quote.text.trim(),
+            category: quote.category.trim()
+          });
+        } else {
+          invalidQuotes.push(index + 1);
+        }
       });
       
       if (validQuotes.length === 0) {
         throw new Error('No valid quotes found in the file');
       }
       
+      // Check for duplicates
+      const existingQuotes = quotes.map(q => `${q.text.toLowerCase()}-${q.category.toLowerCase()}`);
+      const newQuotes = validQuotes.filter(quote => 
+        !existingQuotes.includes(`${quote.text.toLowerCase()}-${quote.category.toLowerCase()}`)
+      );
+      
+      if (newQuotes.length === 0) {
+        showNotification('All quotes in the file already exist!', 'info');
+        event.target.value = '';
+        return;
+      }
+      
       // Add imported quotes to existing quotes
-      quotes.push(...validQuotes);
+      quotes.push(...newQuotes);
       
       // Save to local storage
       saveQuotes();
@@ -187,7 +234,16 @@ function importFromJsonFile(event) {
       populateCategories();
       updateStats();
       
-      showNotification(`${validQuotes.length} quotes imported successfully!`, 'success');
+      // Show detailed import results
+      let message = `${newQuotes.length} quotes imported successfully!`;
+      if (invalidQuotes.length > 0) {
+        message += ` ${invalidQuotes.length} invalid quotes skipped.`;
+      }
+      if (validQuotes.length > newQuotes.length) {
+        message += ` ${validQuotes.length - newQuotes.length} duplicates ignored.`;
+      }
+      
+      showNotification(message, 'success');
       
       // Clear the file input
       event.target.value = '';
@@ -723,8 +779,197 @@ function testPopulateCategories() {
   }
 }
 
-// Make test function available globally for manual testing
+// Test function to verify web storage functionality
+function testWebStorage() {
+  console.log('=== Testing Web Storage Functionality ===');
+  
+  let allTestsPassed = true;
+  
+  // Test 1: Check if localStorage is available
+  try {
+    localStorage.setItem('test', 'test');
+    localStorage.removeItem('test');
+    console.log('✓ localStorage is available');
+  } catch (error) {
+    console.error('✗ localStorage is not available:', error);
+    allTestsPassed = false;
+  }
+  
+  // Test 2: Check if sessionStorage is available
+  try {
+    sessionStorage.setItem('test', 'test');
+    sessionStorage.removeItem('test');
+    console.log('✓ sessionStorage is available');
+  } catch (error) {
+    console.error('✗ sessionStorage is not available:', error);
+    allTestsPassed = false;
+  }
+  
+  // Test 3: Test saveQuotes function
+  try {
+    const originalQuotes = [...quotes];
+    const testQuotes = [{ text: 'Test quote', category: 'Test' }];
+    quotes = testQuotes;
+    saveQuotes();
+    
+    const savedData = localStorage.getItem(STORAGE_KEYS.QUOTES);
+    if (savedData) {
+      const parsedData = JSON.parse(savedData);
+      if (Array.isArray(parsedData) && parsedData.length === 1) {
+        console.log('✓ saveQuotes function works correctly');
+      } else {
+        console.error('✗ saveQuotes function failed validation');
+        allTestsPassed = false;
+      }
+    } else {
+      console.error('✗ saveQuotes function failed to save data');
+      allTestsPassed = false;
+    }
+    
+    // Restore original quotes
+    quotes = originalQuotes;
+    saveQuotes();
+  } catch (error) {
+    console.error('✗ saveQuotes test failed:', error);
+    allTestsPassed = false;
+  }
+  
+  // Test 4: Test JSON export functionality
+  try {
+    if (typeof exportToJson === 'function') {
+      console.log('✓ exportToJson function exists');
+    } else {
+      console.error('✗ exportToJson function not found');
+      allTestsPassed = false;
+    }
+  } catch (error) {
+    console.error('✗ exportToJson test failed:', error);
+    allTestsPassed = false;
+  }
+  
+  // Test 5: Test JSON import functionality
+  try {
+    if (typeof importFromJsonFile === 'function') {
+      console.log('✓ importFromJsonFile function exists');
+    } else {
+      console.error('✗ importFromJsonFile function not found');
+      allTestsPassed = false;
+    }
+  } catch (error) {
+    console.error('✗ importFromJsonFile test failed:', error);
+    allTestsPassed = false;
+  }
+  
+  if (allTestsPassed) {
+    console.log('✓ All web storage tests passed!');
+    showNotification('Web storage tests passed!', 'success');
+    return true;
+  } else {
+    console.error('✗ Some web storage tests failed');
+    showNotification('Web storage tests failed!', 'error');
+    return false;
+  }
+}
+
+// Function to create sample JSON data for testing
+function createSampleJsonData() {
+  const sampleQuotes = [
+    { text: "Sample quote 1", category: "Sample" },
+    { text: "Sample quote 2", category: "Test" },
+    { text: "Sample quote 3", category: "Demo" }
+  ];
+  
+  const dataStr = JSON.stringify(sampleQuotes, null, 2);
+  const dataBlob = new Blob([dataStr], { type: 'application/json' });
+  const url = URL.createObjectURL(dataBlob);
+  
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'sample_quotes.json';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+  
+  showNotification('Sample JSON file created!', 'success');
+}
+
+// Make test functions available globally for manual testing
 window.testPopulateCategories = testPopulateCategories;
+window.testWebStorage = testWebStorage;
+window.createSampleJsonData = createSampleJsonData;
+
+// Comprehensive validation function for all functionality
+function validateAllFunctionality() {
+  console.log('=== Comprehensive Functionality Validation ===');
+  
+  const results = {
+    webStorage: false,
+    jsonExport: false,
+    jsonImport: false,
+    categories: false,
+    sessionStorage: false
+  };
+  
+  // Test web storage
+  try {
+    localStorage.setItem('validation_test', 'test');
+    const testValue = localStorage.getItem('validation_test');
+    localStorage.removeItem('validation_test');
+    results.webStorage = testValue === 'test';
+    console.log(`✓ Web Storage: ${results.webStorage ? 'PASS' : 'FAIL'}`);
+  } catch (error) {
+    console.error('✗ Web Storage test failed:', error);
+  }
+  
+  // Test session storage
+  try {
+    sessionStorage.setItem('validation_test', 'test');
+    const testValue = sessionStorage.getItem('validation_test');
+    sessionStorage.removeItem('validation_test');
+    results.sessionStorage = testValue === 'test';
+    console.log(`✓ Session Storage: ${results.sessionStorage ? 'PASS' : 'FAIL'}`);
+  } catch (error) {
+    console.error('✗ Session Storage test failed:', error);
+  }
+  
+  // Test JSON export
+  try {
+    results.jsonExport = typeof exportToJson === 'function';
+    console.log(`✓ JSON Export: ${results.jsonExport ? 'PASS' : 'FAIL'}`);
+  } catch (error) {
+    console.error('✗ JSON Export test failed:', error);
+  }
+  
+  // Test JSON import
+  try {
+    results.jsonImport = typeof importFromJsonFile === 'function';
+    console.log(`✓ JSON Import: ${results.jsonImport ? 'PASS' : 'FAIL'}`);
+  } catch (error) {
+    console.error('✗ JSON Import test failed:', error);
+  }
+  
+  // Test categories functionality
+  try {
+    results.categories = typeof populateCategories === 'function' && categoryFilter;
+    console.log(`✓ Categories: ${results.categories ? 'PASS' : 'FAIL'}`);
+  } catch (error) {
+    console.error('✗ Categories test failed:', error);
+  }
+  
+  // Summary
+  const allPassed = Object.values(results).every(result => result === true);
+  console.log(`\n=== Validation Summary ===`);
+  console.log(`Overall Result: ${allPassed ? 'ALL TESTS PASSED' : 'SOME TESTS FAILED'}`);
+  
+  if (allPassed) {
+    showNotification('All functionality validated successfully!', 'success');
+  } else {
+    showNotification('Some functionality validation failed. Check console for details.', 'error');
+  }
+  
+  return allPassed;
+}
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
@@ -743,6 +988,11 @@ document.addEventListener('DOMContentLoaded', function() {
   setTimeout(() => {
     validateCategoriesPopulation();
   }, 100);
+  
+  // Comprehensive validation
+  setTimeout(() => {
+    validateAllFunctionality();
+  }, 200);
   
   // Show initial quote
   if (!userPreferences.rememberLastQuote || !quoteDisplay.textContent.includes('"')) {
